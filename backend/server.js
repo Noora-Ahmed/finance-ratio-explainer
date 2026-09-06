@@ -7,13 +7,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Set up the local MySQL database link
-const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
+// 🚀 FIXED: Support both a single connection string (Aiven Cloud) and separate variables (Localhost)
+let db;
+if (process.env.DATABASE_URL) {
+    db = mysql.createConnection(process.env.DATABASE_URL);
+} else {
+    db = mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+    });
+}
 
 db.connect((err) => {
     if (err) {
