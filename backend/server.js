@@ -1,0 +1,58 @@
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql2');
+require('dotenv').config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Set up the local MySQL database link
+const db = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+});
+
+db.connect((err) => {
+    if (err) {
+        console.error('❌ MySQL Connection Failed: ' + err.message);
+    } else {
+        console.log('📂 Connected to MySQL database successfully.');
+    }
+});
+
+app.post('/api/explain-ratio', (req, res) => {
+    const { ratioName, ratioValue } = req.body;
+    
+    if (!ratioName || !ratioValue) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Query your live database for the seeded text
+    db.query('SELECT mock_text FROM mock_explanations WHERE ratio_name = ?', [ratioName], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: "Database query error" });
+        }
+
+        if (results.length > 0) {
+            // Found your seeded text!
+            res.json({
+                ratioName,
+                ratioValue,
+                explanation: `[Database Match] ${results[0].mock_text} (Current input value: ${ratioValue})`
+            });
+        } else {
+            // Fallback text if the student types a ratio we haven't seeded yet
+            res.json({
+                ratioName,
+                ratioValue,
+                explanation: `[Fallback] A ${ratioName} ratio of ${ratioValue} indicates standard operational threshold performance. Review peer benchmarks.`
+            });
+        }
+    });
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Backbone server running on port ${PORT}`));
