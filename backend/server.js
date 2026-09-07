@@ -9,7 +9,11 @@ import 'dotenv/config';
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+// Configured CORS to cleanly allow your specific Vercel production frontend
+app.use(cors({
+  origin: ['https://vercel.app', 'http://localhost:5173'],
+  credentials: true
+}));
 app.use(express.json());
 
 // 1. Database Connection Pool Setup
@@ -29,9 +33,13 @@ const ai = new GoogleGenAI();
 // 3. Day 3: Authentication Middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Splits 'Bearer TOKEN_STRING'
+  
+  // Safe extraction safeguard
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
 
-  if (!token) return res.status(401).json({ error: 'Access token required' });
+  const token = authHeader.split(' ')[1];
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: 'Invalid or expired token' });
@@ -93,17 +101,19 @@ app.post('/api/explain', async (req, res) => {
   try {
     const { ratioName, ratioValue } = req.body;
     
-    // Check if optional auth header is sent to track history
+    // Day 4 Safe Split Protection: Handles missing authorization headers cleanly
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
     let loggedInUserId = null;
 
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        loggedInUserId = decoded.userId;
-      } catch (err) {
-        // Suppress invalid tokens silently for anonymous users
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      if (token && token !== 'null' && token !== 'undefined') {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          loggedInUserId = decoded.userId;
+        } catch (err) {
+          // Suppress invalid tokens silently for anonymous user flexibility
+        }
       }
     }
 
