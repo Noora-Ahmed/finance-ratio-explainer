@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 
 function App() {
-  // Dynamic Environment Base URL Configuration
+  // Dynamic Environment Base URL Configuration mapped to your live Render backend
   const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:5000' 
-    : 'https://onrender.com';
+    : 'https://finance-ratio-explainer.onrender.com';
 
   // Ratio Inputs & Outputs State
   const [ratioName, setRatioName] = useState('');
@@ -28,12 +28,12 @@ function App() {
   const fetchHistory = async () => {
     if (!token) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/api/history`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const response = await fetch(${API_BASE_URL}/api/history, {
+        headers: { 'Authorization': Bearer ${token} }
       });
       const data = await response.json();
       if (response.ok) {
-        setHistory(data);
+        setHistory(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error('Error fetching history:', err);
@@ -48,14 +48,21 @@ function App() {
   // Day 2 Live AI Pipeline & Day 3 Saved Action Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Day 4 Input Constraint Check
+    if (ratioName.length > 50 || ratioValue.length > 20) {
+      setResult('⚠️ Input limits exceeded. Please keep the ratio name under 50 characters and the value under 20 characters.');
+      return;
+    }
+
     setLoading(true);
     setResult('');
     
     try {
       const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token) headers['Authorization'] = Bearer ${token};
 
-      const response = await fetch(`${API_BASE_URL}/api/explain`, {
+      const response = await fetch(${API_BASE_URL}/api/explain, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({ ratioName, ratioValue })
@@ -84,7 +91,7 @@ function App() {
     const endpoint = isSignUp ? 'signup' : 'login';
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/${endpoint}`, {
+      const response = await fetch(${API_BASE_URL}/api/auth/${endpoint}, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -124,18 +131,25 @@ function App() {
       {/* Left Workspace Panel */}
       <div style={{ flex: 1, padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
         
-        {/* Core Workspace Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '24px', margin: 0 }}> Finance Ratio Explainer</h1>
-          {token && (
-            <button onClick={handleLogout} style={{ padding: '6px 12px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}>
-              Log Out
-            </button>
-          )}
+        {/* Core Workspace Header & Landing Hero */}
+        <div style={{ marginBottom: '35px', paddingBottom: '20px', borderBottom: '1px solid #eaeaea' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#111', letterSpacing: '-0.5px', margin: 0 }}>
+              Finance Ratio Explainer
+            </h1>
+            {token && (
+              <button onClick={handleLogout} style={{ padding: '6px 12px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}>
+                Log Out
+              </button>
+            )}
+          </div>
+          <p style={{ fontSize: '15px', color: '#666', lineHeight: '1.4', margin: 0 }}>
+            Stop reciting raw formulas. Turn complex corporate financial metrics into plain, recruiter-ready interview answers instantly.
+          </p>
         </div>
 
         {token && (
-          <p style={{ marginTop: '-10px', marginBottom: '20px', fontSize: '14px', color: '#555' }}>
+          <p style={{ marginTop: '-20px', marginBottom: '20px', fontSize: '14px', color: '#555' }}>
             Logged in as: <strong>{userEmail}</strong>
           </p>
         )}
@@ -169,7 +183,15 @@ function App() {
           <button 
             type="submit" 
             disabled={loading}
-            style={{ padding: '12px', background: '#0070f3', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            style={{ 
+              padding: '12px', 
+              background: loading ? '#66a3ff' : '#0070f3', 
+              color: '#fff', 
+              border: 'none', 
+              borderRadius: '4px', 
+              cursor: loading ? 'not-allowed' : 'pointer', 
+              fontWeight: 'bold' 
+            }}
           >
             {loading ? 'Processing...' : 'Generate Explanation'}
           </button>
@@ -201,6 +223,7 @@ function App() {
           </div>
         )}
       </div>
+
 
       {/* Right-Side Dashboard User Archive Panel */}
       {token && (
