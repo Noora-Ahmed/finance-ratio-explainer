@@ -28,8 +28,9 @@ function App() {
   const fetchHistory = async () => {
     if (!token) return;
     try {
-      const response = await fetch(${API_BASE_URL}/api/history, {
-        headers: { 'Authorization': Bearer ${token} }
+      // FIXED: Ensuring proper curly braces syntax inside the template literal string path
+      const response = await fetch(`${API_BASE_URL}/api/history`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
       if (response.ok) {
@@ -39,7 +40,6 @@ function App() {
       console.error('Error fetching history:', err);
     }
   };
-
   // Automatically fetch history data on login state changes
   useEffect(() => {
     fetchHistory();
