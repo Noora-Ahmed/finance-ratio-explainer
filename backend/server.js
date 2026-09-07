@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const app = express();
 
+// ✅ Explicit CORS setup: allow your Vercel frontend domain
 app.use(cors({
   origin: ['https://finance-ratio-explainer.vercel.app'],
   methods: ['GET', 'POST'],
@@ -16,6 +17,7 @@ app.use(express.json());
 // 🚀 FIXED: Proper MySQL2 connection handling
 let db;
 if (process.env.DATABASE_URL) {
+    // Use full connection string directly
     db = mysql.createConnection(process.env.DATABASE_URL + '?ssl=true');
 } else {
     db = mysql.createConnection({
@@ -42,9 +44,11 @@ app.post('/api/explain-ratio', (req, res) => {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // ✅ Normalize inputs
     ratioName = ratioName.toLowerCase().trim();
     ratioValue = ratioValue.toString().trim();
 
+    // ✅ Try exact match first (case-insensitive on ratio_name)
     db.query(
         'SELECT mock_text FROM mock_explanations WHERE LOWER(ratio_name) = ? AND ratio_value = ?',
         [ratioName, ratioValue],
