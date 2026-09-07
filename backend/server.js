@@ -118,13 +118,13 @@ app.post('/api/explain', async (req, res) => {
       return res.status(400).json({ error: 'Please provide both ratio name and value.' });
     }
 
-    // Call Gemini Live API
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `You are a corporate finance recruiter interviewing a final-year finance student. 
-      Explain what a "${ratioName}" of ${ratioValue} means for a company's financial health. 
-      Provide a highly concise, 2-sentence explanation that the student can easily state during an interview.`,
-    });
+  // Call Gemini Live API
+  const response = await ai.models.generateContent({
+    model: 'gemini-3.5-flash', // UPDATED VERSION FOR NEW GOOGLE ACCOUNTS
+    contents: `You are a corporate finance recruiter interviewing a final-year finance student. 
+    Explain what a "${ratioName}" of ${ratioValue} means for a company's financial health. 
+    Provide a highly concise, 2-sentence explanation that the student can easily state during an interview.`,
+  });
 
     const explanation = response.text;
 
