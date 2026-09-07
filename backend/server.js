@@ -4,12 +4,15 @@ require('dotenv').config();
 
 const app = express();
 
-// ✅ Explicit CORS setup: allow your Vercel frontend domain
+// 🚀 FIXED: Simplified CORS setup to allow all origins seamlessly and resolve browser blocking
 app.use(cors({
-  origin: ['https://vercel.app'],
-  methods: ['GET', 'POST'],
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type']
 }));
+
+// Handle preflight requests universally
+app.options('*', cors()); 
 
 app.use(express.json());
 
