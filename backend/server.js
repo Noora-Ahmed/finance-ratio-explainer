@@ -14,19 +14,18 @@ app.use(cors({
 
 app.use(express.json());
 
-// 🚀 FIXED: Support both a single connection string (Aiven Cloud) and separate variables (Localhost)
+// 🚀 FIXED: Proper MySQL2 connection handling
 let db;
 if (process.env.DATABASE_URL) {
-    db = mysql.createConnection({
-        uri: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
-    });
+    // Use full connection string directly
+    db = mysql.createConnection(process.env.DATABASE_URL + '?ssl=true');
 } else {
     db = mysql.createConnection({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
+        database: process.env.DB_NAME,
+        ssl: { rejectUnauthorized: false }
     });
 }
 
