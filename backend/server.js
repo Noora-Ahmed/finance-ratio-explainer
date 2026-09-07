@@ -14,26 +14,35 @@ app.use(cors({
 
 app.use(express.json());
 
-// 🚀 FIXED: Proper MySQL2 connection handling
-let db;
+// 🚀 FIXED: Changed from createConnection to createPool to prevent cloud connection timeouts
+let pool;
 if (process.env.DATABASE_URL) {
-    // Use full connection string directly
-    db = mysql.createConnection(process.env.DATABASE_URL + '?ssl=true');
+    // Correctly handle SSL configurations for hosted string parameters
+    const connectionUrl = process.env.DATABASE_URL.includes('ssl=') 
+        ? process.env.DATABASE_URL 
+        : `${process.env.DATABASE_URL}?ssl={"rejectUnauthorized":false}`;
+        
+    pool = mysql.createPool(connectionUrl);
 } else {
-    db = mysql.createConnection({
+    pool = mysql.createPool({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
         ssl: { rejectUnauthorized: false }
     });
 }
 
-db.connect((err) => {
+// Check pool availability
+pool.getConnection((err, connection) => {
     if (err) {
-        console.error('❌ MySQL Connection Failed: ' + err.message);
+        console.error('❌ MySQL Connection Pool Failed: ' + err.message);
     } else {
-        console.log('📂 Connected to MySQL database successfully.');
+        console.log('📂 Connected to MySQL database pool successfully.');
+        connection.release(); // release back to pool
     }
 });
 
@@ -48,17 +57,17 @@ app.post('/api/explain-ratio', (req, res) => {
     ratioName = ratioName.toLowerCase().trim();
     ratioValue = ratioValue.toString().trim();
 
-    // ✅ Try exact match first (case-insensitive on ratio_name)
-    db.query(
+    // ✅ Using the pool query stream to prevent statement execution timeouts
+    pool.query(
         'SELECT mock_text FROM mock_explanations WHERE LOWER(ratio_name) = ? AND ratio_value = ?',
         [ratioName, ratioValue],
         (err, results) => {
             if (err) {
                 console.error('❌ Query failed:', err.message);
-                return res.status(500).json({ error: "Database query error" });
+                return res.status(500).json({ error: "Database query error", details: err.message });
             }
 
-            if (results.length > 0) {
+            if (results && results.length > 0) {
                 return res.json({
                     ratioName,
                     ratioValue,
