@@ -84,14 +84,15 @@ function App() {
       setLoading(false);
     }
   };
-  // Day 3 User Security Identity Endpoint Client
-  const handleAuth = async (e) => {
+ // Day 3 User Security Identity Endpoint Client
+ const handleAuth = async (e) => {
     e.preventDefault();
     setAuthMessage('');
     const endpoint = isSignUp ? 'signup' : 'login';
 
     try {
-      const response = await fetch(${API_BASE_URL}/api/auth/${endpoint}, {
+      // FIXED: Ensuring proper curly braces syntax inside the template literal string path
+      const response = await fetch(`${API_BASE_URL}/api/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -115,7 +116,7 @@ function App() {
       setAuthMessage(err.message);
     }
   };
-
+  
   // Clean Session Workspace Reset
   const handleLogout = () => {
     localStorage.removeItem('token');
