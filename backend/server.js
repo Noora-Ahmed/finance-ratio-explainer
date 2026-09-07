@@ -1,5 +1,21 @@
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+
+// ✅ Explicit CORS setup: allow your Vercel frontend domain
+app.use(cors({
+  origin: ['https://vercel.app'],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
+
+app.use(express.json());
+
+// ✅ Ratio explainer endpoint
 app.post('/api/explain-ratio', (req, res) => {
-    // Supporting both spellings just in case!
+    // Supporting both spellings (ratioName and rationName) just in case!
     let ratioName = req.body.ratioName || req.body.rationName;
     let ratioValue = req.body.ratioValue;
     
@@ -52,3 +68,6 @@ app.post('/api/explain-ratio', (req, res) => {
     // Return the response immediately without waiting for an external database
     return res.json({ ratioName, ratioValue, explanation });
 });
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Backbone server running on port ${PORT}`));
