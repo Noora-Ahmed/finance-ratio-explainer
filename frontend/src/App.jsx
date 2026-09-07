@@ -60,9 +60,10 @@ function App() {
     
     try {
       const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = Bearer ${token};
+      // FIXED: Semicolon added at the end of this assignment line to satisfy the compiler
+      if (token) { headers['Authorization'] = `Bearer ${token}`; }
 
-      const response = await fetch(${API_BASE_URL}/api/explain, {
+      const response = await fetch(`${API_BASE_URL}/api/explain`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({ ratioName, ratioValue })
@@ -83,7 +84,6 @@ function App() {
       setLoading(false);
     }
   };
-
   // Day 3 User Security Identity Endpoint Client
   const handleAuth = async (e) => {
     e.preventDefault();
