@@ -126,7 +126,7 @@ function App() {
         
         {/* Core Workspace Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '24px', margin: 0 }}>📊 Finance Ratio Explainer</h1>
+          <h1 style={{ fontSize: '24px', margin: 0 }}> Finance Ratio Explainer</h1>
           {token && (
             <button onClick={handleLogout} style={{ padding: '6px 12px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}>
               Log Out
