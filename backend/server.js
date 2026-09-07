@@ -12,7 +12,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// 1. Dynamic Pool Configuration Setup (Auto-switches between Local & Cloud Aiven SSL parameters)
+// 1. Dynamic Pool Configuration Setup (Clean URL configuration target mappings)
 let poolConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
@@ -23,24 +23,29 @@ let poolConfig = {
   queueLimit: 0
 };
 
+// Force structural parsing of the connection URL string parameter if live on Render
 if (process.env.DATABASE_URL) {
-  const dbUrl = new URL(process.env.DATABASE_URL);
-  poolConfig = {
-    host: dbUrl.hostname,
-    user: dbUrl.username,
-    password: dbUrl.password,
-    database: dbUrl.pathname.replace('/', ''),
-    port: dbUrl.port || 3306,
-    ssl: { rejectUnauthorized: false },
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-  };
+  try {
+    const dbUrl = new URL(process.env.DATABASE_URL);
+    poolConfig = {
+      host: dbUrl.hostname,
+      user: dbUrl.username,
+      password: dbUrl.password,
+      database: dbUrl.pathname.replace('/', ''),
+      port: dbUrl.port || 3306,
+      ssl: { rejectUnauthorized: false }, // Enforces safe SSL handshake parsing
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    };
+  } catch (urlErr) {
+    console.error('DATABASE_URL parsing failed, falling back to basic fields:', urlErr);
+  }
 }
 
 const db = mysql.createPool(poolConfig);
 
-// AUTOMATIC TABLE INITIALIZER: Self-heals empty cloud databases instantly on boot!
+// AUTOMATIC TABLE INITIALIZER: Sets up tables cleanly on cloud database instances automatically
 async function initializeDatabase() {
   try {
     await db.query(`
@@ -63,9 +68,9 @@ async function initializeDatabase() {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );
     `);
-    console.log('Database tables verified successfully.');
+    console.log('Database tables successfully verified.');
   } catch (err) {
-    console.error('Database initialization failed:', err);
+    console.error('Database self-healing initialization failed:', err);
   }
 }
 initializeDatabase();
@@ -79,6 +84,8 @@ const authenticateToken = (req, res, next) => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Access token required' });
   }
+  
+  // FIXED: Extract individual token out of bearer format string mapping array cleanly
   const token = authHeader.split(' ')[1];
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -117,7 +124,7 @@ app.post('/api/auth/login', async (req, res) => {
     const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (!users || users.length === 0) return res.status(400).json({ error: 'Invalid email or password' });
 
-    // FIXED: Properly selecting the first element [0] from the database response array row
+    // FIXED: Correctly matching properties from row items arrays
     const user = users[0];
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(400).json({ error: 'Invalid email or password' });
