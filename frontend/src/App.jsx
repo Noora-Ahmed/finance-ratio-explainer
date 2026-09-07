@@ -35,8 +35,7 @@ function App() {
 
   return (
     <div style={{ padding: '40px', fontFamily: 'system-ui, sans-serif', maxWidth: '600px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '24px', marginBottom: '10px' }}>📊 Finance Ratio Explainer</h1>
-      <p style={{ color: '#666', marginBottom: '20px' }}>Day 1 Framework: Testing end-to-end data connectivity.</p>
+      <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>📊 Finance Ratio Explainer</h1>
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <div>
