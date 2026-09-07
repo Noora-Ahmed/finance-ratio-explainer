@@ -5,7 +5,6 @@ require('dotenv').config();
 
 const app = express();
 
-// ✅ Explicit CORS setup: allow your Vercel frontend domain
 app.use(cors({
   origin: ['https://finance-ratio-explainer.vercel.app'],
   methods: ['GET', 'POST'],
@@ -17,7 +16,6 @@ app.use(express.json());
 // 🚀 FIXED: Proper MySQL2 connection handling
 let db;
 if (process.env.DATABASE_URL) {
-    // Use full connection string directly
     db = mysql.createConnection(process.env.DATABASE_URL + '?ssl=true');
 } else {
     db = mysql.createConnection({
@@ -44,11 +42,9 @@ app.post('/api/explain-ratio', (req, res) => {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // ✅ Normalize inputs
     ratioName = ratioName.toLowerCase().trim();
     ratioValue = ratioValue.toString().trim();
 
-    // ✅ Try exact match first (case-insensitive on ratio_name)
     db.query(
         'SELECT mock_text FROM mock_explanations WHERE LOWER(ratio_name) = ? AND ratio_value = ?',
         [ratioName, ratioValue],
@@ -94,6 +90,12 @@ app.post('/api/explain-ratio', (req, res) => {
                 }
             } else if (ratioName === 'return on assets') {
                 explanation = `A return on assets of ${ratioValue} shows how efficiently the company uses assets to generate profit. Higher values indicate stronger performance.`;
+            } else if (ratioName === 'gross margin') {
+                explanation = `A gross margin of ${ratioValue} shows how much profit the company retains after covering direct production costs. Higher margins indicate stronger pricing power or cost control.`;
+            } else if (ratioName === 'return on equity') {
+                explanation = `A return on equity of ${ratioValue} reflects how effectively the company generates profit from shareholder investment. Higher values suggest strong management performance.`;
+            } else if (ratioName === 'net profit margin') {
+                explanation = `A net profit margin of ${ratioValue} indicates how much of each dollar of revenue is converted into profit. Higher margins show better overall efficiency.`;
             } else {
                 explanation = `[Fallback] A ${ratioName} ratio of ${ratioValue} indicates standard operational threshold performance. Review peer benchmarks.`;
             }
