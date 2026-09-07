@@ -10,10 +10,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Configured CORS to cleanly allow your specific Vercel production frontend
-app.use(cors({
-  origin: ['https://vercel.app', 'http://localhost:5173'],
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 
 // 1. Database Connection Pool Setup
