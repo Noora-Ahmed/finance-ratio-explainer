@@ -4,13 +4,23 @@ const mysql = require('mysql2');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// ✅ Explicit CORS setup: allow your frontend domain
+app.use(cors({
+  origin: ['https://finance-ratio-explainer.onrender.com'], // frontend domain
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json());
 
 // 🚀 FIXED: Support both a single connection string (Aiven Cloud) and separate variables (Localhost)
 let db;
 if (process.env.DATABASE_URL) {
-    db = mysql.createConnection(process.env.DATABASE_URL);
+    db = mysql.createConnection({
+        uri: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false } // ✅ Fix for Render/Aiven SSL
+    });
 } else {
     db = mysql.createConnection({
         host: process.env.DB_HOST,
@@ -35,21 +45,18 @@ app.post('/api/explain-ratio', (req, res) => {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Query your live database for the seeded text
     db.query('SELECT mock_text FROM mock_explanations WHERE ratio_name = ?', [ratioName], (err, results) => {
         if (err) {
             return res.status(500).json({ error: "Database query error" });
         }
 
         if (results.length > 0) {
-            // Found your seeded text!
             res.json({
                 ratioName,
                 ratioValue,
                 explanation: `[Database Match] ${results[0].mock_text} (Current input value: ${ratioValue})`
             });
         } else {
-            // Fallback text if the student types a ratio we haven't seeded yet
             res.json({
                 ratioName,
                 ratioValue,

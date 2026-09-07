@@ -13,11 +13,12 @@ function App() {
     setResult('');
     
     try {
-      const response = await fetch('https://onrender.com', {
+      const response = await fetch('https://finance-ratio-explainer.onrender.com/api/explain-ratio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ratioName, ratioValue })
       });
+
       const data = await response.json();
       
       if (response.ok) {
@@ -26,7 +27,8 @@ function App() {
         setResult(data.error || 'Something went wrong.');
       }
     } catch (err) {
-      setResult('Error connecting to backend server. Make sure it is running!');
+      console.error(err);
+      setResult('Error connecting to backend server. Make sure it is running and CORS is enabled!');
     } finally {
       setLoading(false);
     }
