@@ -9,36 +9,66 @@ import 'dotenv/config';
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Configured CORS to cleanly allow your specific Vercel production frontend
 app.use(cors());
 app.use(express.json());
 
+// 1. Dynamic Pool Configuration Setup (Auto-switches between Local & Cloud Aiven SSL parameters)
 let poolConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'finance_explainer_db',
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'finance_explainer_db',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+};
+
+if (process.env.DATABASE_URL) {
+  const dbUrl = new URL(process.env.DATABASE_URL);
+  poolConfig = {
+    host: dbUrl.hostname,
+    user: dbUrl.username,
+    password: dbUrl.password,
+    database: dbUrl.pathname.replace('/', ''),
+    port: dbUrl.port || 3306,
+    ssl: { rejectUnauthorized: false },
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
   };
-  
-  if (process.env.DATABASE_URL) {
-    const dbUrl = new URL(process.env.DATABASE_URL);
-    poolConfig = {
-      host: dbUrl.hostname,
-      user: dbUrl.username,
-      password: dbUrl.password,
-      database: dbUrl.pathname.replace('/', ''),
-      port: dbUrl.port || 3306,
-      ssl: { rejectUnauthorized: false },
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0
-    };
+}
+
+const db = mysql.createPool(poolConfig);
+
+// AUTOMATIC TABLE INITIALIZER: Self-heals empty cloud databases instantly on boot!
+async function initializeDatabase() {
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS explanations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        ratio_name VARCHAR(100) NOT NULL,
+        ratio_value VARCHAR(50) NOT NULL,
+        generated_explanation TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+    console.log('Database tables verified successfully.');
+  } catch (err) {
+    console.error('Database initialization failed:', err);
   }
-  
-  const db = mysql.createPool(poolConfig);
+}
+initializeDatabase();
 
 // 2. Initialize Gemini Client
 const ai = new GoogleGenAI();
@@ -46,12 +76,9 @@ const ai = new GoogleGenAI();
 // 3. Day 3: Authentication Middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  
-  // Safe extraction safeguard
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Access token required' });
   }
-
   const token = authHeader.split(' ')[1];
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -72,17 +99,10 @@ app.post('/api/auth/signup', async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: 'Missing email or password' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    
-    await db.query(
-      'INSERT INTO users (email, password_hash) VALUES (?, ?)',
-      [email, hashedPassword]
-    );
-
+    await db.query('INSERT INTO users (email, password_hash) VALUES (?, ?)', [email, hashedPassword]);
     return res.status(201).json({ message: 'User registered successfully!' });
   } catch (error) {
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
+    if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Email already exists' });
     console.error('Signup error:', error);
     return res.status(500).json({ error: 'Server error during registration' });
   }
@@ -95,8 +115,9 @@ app.post('/api/auth/login', async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: 'Missing email or password' });
 
     const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (users.length === 0) return res.status(400).json({ error: 'Invalid email or password' });
+    if (!users || users.length === 0) return res.status(400).json({ error: 'Invalid email or password' });
 
+    // FIXED: Properly selecting the first element [0] from the database response array row
     const user = users[0];
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(400).json({ error: 'Invalid email or password' });
@@ -113,8 +134,6 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/explain', async (req, res) => {
   try {
     const { ratioName, ratioValue } = req.body;
-    
-    // Day 4 Safe Split Protection: Handles missing authorization headers cleanly
     const authHeader = req.headers['authorization'];
     let loggedInUserId = null;
 
@@ -125,26 +144,20 @@ app.post('/api/explain', async (req, res) => {
           const decoded = jwt.verify(token, process.env.JWT_SECRET);
           loggedInUserId = decoded.userId;
         } catch (err) {
-          // Suppress invalid tokens silently for anonymous user flexibility
+          // Suppress invalid tokens silently
         }
       }
     }
 
-    if (!ratioName || !ratioValue) {
-      return res.status(400).json({ error: 'Please provide both ratio name and value.' });
-    }
+    if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
 
-  // Call Gemini Live API
-  const response = await ai.models.generateContent({
-    model: 'gemini-3.5-flash', // UPDATED VERSION FOR NEW GOOGLE ACCOUNTS
-    contents: `You are a corporate finance recruiter interviewing a final-year finance student. 
-    Explain what a "${ratioName}" of ${ratioValue} means for a company's financial health. 
-    Provide a highly concise, 2-sentence explanation that the student can easily state during an interview.`,
-  });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
+    });
 
     const explanation = response.text;
 
-    // Day 3 Trace: Save query to history if user is logged in
     if (loggedInUserId) {
       await db.query(
         'INSERT INTO explanations (user_id, ratio_name, ratio_value, generated_explanation) VALUES (?, ?, ?, ?)',
@@ -153,7 +166,6 @@ app.post('/api/explain', async (req, res) => {
     }
 
     return res.json({ explanation });
-
   } catch (error) {
     console.error('Gemini/Database Error:', error);
     return res.status(500).json({ error: 'Failed to complete transaction.' });
@@ -174,7 +186,6 @@ app.get('/api/history', authenticateToken, async (req, res) => {
   }
 });
 
-// Start Server
 app.listen(port, () => {
   console.log(`Server successfully active on port ${port}`);
 });
