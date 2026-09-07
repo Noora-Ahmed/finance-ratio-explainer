@@ -13,18 +13,32 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// 1. Database Connection Pool Setup (Auto-switches for production vs local)
-const db = process.env.DATABASE_URL 
-  ? mysql.createPool(process.env.DATABASE_URL)
-  : mysql.createPool({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'finance_explainer_db',
+let poolConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'finance_explainer_db',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  };
+  
+  if (process.env.DATABASE_URL) {
+    const dbUrl = new URL(process.env.DATABASE_URL);
+    poolConfig = {
+      host: dbUrl.hostname,
+      user: dbUrl.username,
+      password: dbUrl.password,
+      database: dbUrl.pathname.replace('/', ''),
+      port: dbUrl.port || 3306,
+      ssl: { rejectUnauthorized: false },
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0
-    });
+    };
+  }
+  
+  const db = mysql.createPool(poolConfig);
 
 // 2. Initialize Gemini Client
 const ai = new GoogleGenAI();
