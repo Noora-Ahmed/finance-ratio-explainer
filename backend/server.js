@@ -39,15 +39,19 @@ db.connect((err) => {
 });
 
 app.post('/api/explain-ratio', (req, res) => {
-    const { ratioName, ratioValue } = req.body;
+    let { ratioName, ratioValue } = req.body;
     
     if (!ratioName || !ratioValue) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // ✅ Try exact match first
+    // ✅ Normalize inputs
+    ratioName = ratioName.toLowerCase().trim();
+    ratioValue = ratioValue.toString().trim();
+
+    // ✅ Try exact match first (case-insensitive on ratio_name)
     db.query(
-        'SELECT mock_text FROM mock_explanations WHERE ratio_name = ? AND ratio_value = ?',
+        'SELECT mock_text FROM mock_explanations WHERE LOWER(ratio_name) = ? AND ratio_value = ?',
         [ratioName, ratioValue],
         (err, results) => {
             if (err) {
@@ -63,11 +67,11 @@ app.post('/api/explain-ratio', (req, res) => {
                 });
             }
 
-            // ✅ If no exact match, generate dynamic explanation
+            // ✅ Dynamic explanation logic
             let explanation;
             const numericValue = parseFloat(ratioValue);
 
-            if (ratioName.toLowerCase() === 'current ratio') {
+            if (ratioName === 'current ratio') {
                 if (numericValue < 1) {
                     explanation = `A current ratio of ${ratioValue} suggests liquidity risk — the company may struggle to cover short-term liabilities.`;
                 } else if (numericValue >= 1 && numericValue < 2) {
@@ -75,7 +79,7 @@ app.post('/api/explain-ratio', (req, res) => {
                 } else {
                     explanation = `A current ratio of ${ratioValue} suggests strong liquidity — the company has ample short-term assets to cover liabilities.`;
                 }
-            } else if (ratioName.toLowerCase() === 'debt-to-equity') {
+            } else if (ratioName === 'debt-to-equity') {
                 if (numericValue < 1) {
                     explanation = `A debt-to-equity ratio of ${ratioValue} shows conservative financing, with equity outweighing debt.`;
                 } else if (numericValue >= 1 && numericValue <= 2) {
@@ -83,6 +87,14 @@ app.post('/api/explain-ratio', (req, res) => {
                 } else {
                     explanation = `A debt-to-equity ratio of ${ratioValue} indicates heavy reliance on debt, which may concern investors.`;
                 }
+            } else if (ratioName === 'quick ratio') {
+                if (numericValue < 1) {
+                    explanation = `A quick ratio of ${ratioValue} suggests potential liquidity issues — the company may not cover liabilities without selling inventory.`;
+                } else {
+                    explanation = `A quick ratio of ${ratioValue} indicates the company can cover short-term liabilities using liquid assets.`;
+                }
+            } else if (ratioName === 'return on assets') {
+                explanation = `A return on assets of ${ratioValue} shows how efficiently the company uses assets to generate profit. Higher values indicate stronger performance.`;
             } else {
                 explanation = `[Fallback] A ${ratioName} ratio of ${ratioValue} indicates standard operational threshold performance. Review peer benchmarks.`;
             }
