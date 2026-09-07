@@ -13,7 +13,6 @@ function App() {
     setResult('');
     
     try {
-      // 🚀 FIXED: Pointing exactly to your public Render service API endpoint
       const response = await fetch('https://onrender.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,7 +80,6 @@ function App() {
   );
 }
 
-// 🚀 Mount the component onto your index.html page
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
