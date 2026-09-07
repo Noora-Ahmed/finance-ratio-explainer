@@ -5,9 +5,9 @@ require('dotenv').config();
 
 const app = express();
 
-// ✅ Explicit CORS setup: allow your frontend domain
+// ✅ Explicit CORS setup: allow your Vercel frontend domain
 app.use(cors({
-  origin: ['https://finance-ratio-explainer.onrender.com'], // frontend domain
+  origin: ['https://finance-ratio-explainer.vercel.app'], // frontend domain
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type']
 }));
