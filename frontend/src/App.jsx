@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom/client';
 
 function App() {
   // Dynamic Environment Base URL Configuration mapped to your live Render backend
-  const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5000' 
+  const API_BASE_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:5000'
     : 'https://finance-ratio-explainer.onrender.com';
 
   // Ratio Inputs & Outputs State
@@ -28,7 +28,6 @@ function App() {
   const fetchHistory = async () => {
     if (!token) return;
     try {
-      // FIXED: Ensuring proper curly braces syntax inside the template literal string path
       const response = await fetch(`${API_BASE_URL}/api/history`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -40,6 +39,7 @@ function App() {
       console.error('Error fetching history:', err);
     }
   };
+
   // Automatically fetch history data on login state changes
   useEffect(() => {
     fetchHistory();
@@ -57,10 +57,9 @@ function App() {
 
     setLoading(true);
     setResult('');
-    
+
     try {
       const headers = { 'Content-Type': 'application/json' };
-      // FIXED: Semicolon added at the end of this assignment line to satisfy the compiler
       if (token) { headers['Authorization'] = `Bearer ${token}`; }
 
       const response = await fetch(`${API_BASE_URL}/api/explain`, {
@@ -70,7 +69,7 @@ function App() {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setResult(data.explanation);
         fetchHistory(); // Sync sidepanel timeline instantly
@@ -84,14 +83,14 @@ function App() {
       setLoading(false);
     }
   };
- // Day 3 User Security Identity Endpoint Client
- const handleAuth = async (e) => {
+
+  // Day 3 User Security Identity Endpoint Client
+  const handleAuth = async (e) => {
     e.preventDefault();
     setAuthMessage('');
     const endpoint = isSignUp ? 'signup' : 'login';
 
     try {
-      // FIXED: Ensuring proper curly braces syntax inside the template literal string path
       const response = await fetch(`${API_BASE_URL}/api/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,10 +127,10 @@ function App() {
 
   return (
     <div style={{ display: 'flex', fontFamily: 'system-ui, sans-serif', minHeight: '100vh', backgroundColor: '#f9f9f9' }}>
-      
+
       {/* Left Workspace Panel */}
       <div style={{ flex: 1, padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
-        
+
         {/* Core Workspace Header & Landing Hero */}
         <div style={{ marginBottom: '35px', paddingBottom: '20px', borderBottom: '1px solid #eaeaea' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -154,44 +153,44 @@ function App() {
             Logged in as: <strong>{userEmail}</strong>
           </p>
         )}
-        
+
         {/* Metric Form Entry */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #eee' }}>
           <div>
             <label style={{ fontWeight: '600' }}>Ratio Name</label>
-            <input 
-              type="text" 
-              placeholder="e.g., Debt-to-Equity, Current Ratio" 
-              value={ratioName} 
-              onChange={(e) => setRatioName(e.target.value)} 
-              required 
+            <input
+              type="text"
+              placeholder="e.g., Debt-to-Equity, Current Ratio"
+              value={ratioName}
+              onChange={(e) => setRatioName(e.target.value)}
+              required
               style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
             />
           </div>
 
           <div>
             <label style={{ fontWeight: '600' }}>Ratio Value</label>
-            <input 
-              type="text" 
-              placeholder="e.g., 2.5, 1.2" 
-              value={ratioValue} 
-              onChange={(e) => setRatioValue(e.target.value)} 
-              required 
+            <input
+              type="text"
+              placeholder="e.g., 2.5, 1.2"
+              value={ratioValue}
+              onChange={(e) => setRatioValue(e.target.value)}
+              required
               style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            style={{ 
-              padding: '12px', 
-              background: loading ? '#66a3ff' : '#0070f3', 
-              color: '#fff', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: loading ? 'not-allowed' : 'pointer', 
-              fontWeight: 'bold' 
+            style={{
+              padding: '12px',
+              background: loading ? '#66a3ff' : '#0070f3',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold'
             }}
           >
             {loading ? 'Processing...' : 'Generate Explanation'}
@@ -224,43 +223,42 @@ function App() {
           </div>
         )}
       </div>
+
       {/* Right-Side Dashboard User Archive Panel */}
-{token && (
-  <div style={{ width: '300px', backgroundColor: '#fff', borderLeft: '1px solid #eee', padding: '16px' }}>
-    <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #eee', fontSize: '16px' }}>
-      History
-    </h3>
-    {history.length === 0 ? (
-      <p style={{ color: '#aaa', fontSize: '14px' }}>Your saved explanations will appear here.</p>
-    ) : (
-      history.map((item) => (
-        <div
-          key={item.id}
-          style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '8px' }}
-        >
-          <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0070f3' }}>{item.ratio_name}</div>
-          <div style={{ fontSize: '13px', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>
-            {item.ratio_value} - {item.generated_explanation
-              ? item.generated_explanation.substring(0, 60) + '...'
-              : 'No explanation'}
-          </div>
+      {token && (
+        <div style={{ width: '300px', backgroundColor: '#fff', borderLeft: '1px solid #eee', padding: '16px' }}>
+          <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #eee', fontSize: '16px' }}>
+            History
+          </h3>
+          {history.length === 0 ? (
+            <p style={{ color: '#aaa', fontSize: '14px' }}>Your saved explanations will appear here.</p>
+          ) : (
+            history.map((item) => (
+              <div
+                key={item.id}
+                style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '8px' }}
+              >
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0070f3' }}>{item.ratio_name}</div>
+                <div style={{ fontSize: '13px', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>
+                  {item.ratio_value} - {item.generated_explanation
+                    ? item.generated_explanation.substring(0, 60) + '...'
+                    : 'No explanation'}
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      ))
-    )}
-  </div>
-)}
+      )}
 
-{/* Fallback when token is not available */}
-{!token && (
-  <div style={{ padding: '20px', textAlign: 'center' }}>
-    Loading dashboard archive...
-  </div>
-)}
+      <footer className="app-footer">
+        <p>
+          &copy; 2026 Finance Ratio Explainer. Built with ❤️ by <span>Mariyam Noora Ahmed</span>
+        </p>
+      </footer>
 
-<footer className="app-footer">
-  <p>
-    &copy; 2026 Finance Ratio Explainer. Built with ❤️ by <span>Mariyam Noora Ahmed</span>
-  </p>
-</footer>
+    </div>
+  );
+}
 
-
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
