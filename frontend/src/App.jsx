@@ -126,132 +126,147 @@ function App() {
   };
 
   return (
-    <div style={{ display: 'flex', fontFamily: 'system-ui, sans-serif', minHeight: '100vh', backgroundColor: '#f9f9f9' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9f9f9' }}>
 
-      {/* Left Workspace Panel */}
-      <div style={{ flex: 1, padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
+      {/* Main two-column layout */}
+      <div style={{ display: 'flex', flex: 1 }}>
 
-        {/* Core Workspace Header & Landing Hero */}
-        <div style={{ marginBottom: '35px', paddingBottom: '20px', borderBottom: '1px solid #eaeaea' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#111', letterSpacing: '-0.5px', margin: 0 }}>
-              Finance Ratio Explainer
-            </h1>
-            {token && (
-              <button onClick={handleLogout} style={{ padding: '6px 12px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}>
-                Log Out
-              </button>
-            )}
+        {/* Left Workspace Panel */}
+        <div style={{ flex: 1, padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
+
+          {/* Core Workspace Header & Landing Hero */}
+          <div style={{ marginBottom: '35px', paddingBottom: '20px', borderBottom: '1px solid #eaeaea' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#111', letterSpacing: '-0.5px', margin: 0 }}>
+                Finance Ratio Explainer
+              </h1>
+              {token && (
+                <button onClick={handleLogout} style={{ padding: '6px 12px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}>
+                  Log Out
+                </button>
+              )}
+            </div>
+            <p style={{ fontSize: '15px', color: '#666', lineHeight: '1.4', margin: 0 }}>
+              Stop reciting raw formulas. Turn complex corporate financial metrics into plain, recruiter-ready interview answers instantly.
+            </p>
           </div>
-          <p style={{ fontSize: '15px', color: '#666', lineHeight: '1.4', margin: 0 }}>
-            Stop reciting raw formulas. Turn complex corporate financial metrics into plain, recruiter-ready interview answers instantly.
-          </p>
+
+          {token && (
+            <p style={{ marginTop: '-20px', marginBottom: '20px', fontSize: '14px', color: '#555' }}>
+              Logged in as: <strong>{userEmail}</strong>
+            </p>
+          )}
+
+          {/* Metric Form Entry */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #eee' }}>
+            <div>
+              <label style={{ fontWeight: '600' }}>Ratio Name</label>
+              <input
+                type="text"
+                placeholder="e.g., Debt-to-Equity, Current Ratio"
+                value={ratioName}
+                onChange={(e) => setRatioName(e.target.value)}
+                required
+                style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontWeight: '600' }}>Ratio Value</label>
+              <input
+                type="text"
+                placeholder="e.g., 2.5, 1.2"
+                value={ratioValue}
+                onChange={(e) => setRatioValue(e.target.value)}
+                required
+                style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                padding: '12px',
+                background: loading ? '#66a3ff' : '#0070f3',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              {loading ? 'Processing...' : 'Generate Explanation'}
+            </button>
+          </form>
+
+          {/* Live Streaming Prompt Target Container */}
+          {result && (
+            <div style={{ marginTop: '20px', padding: '20px', background: '#fff', borderRadius: '8px', border: '1px solid #eee', borderLeft: '5px solid #0070f3' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '10px' }}>Recruiter-Ready Explanation:</h3>
+              <p style={{ margin: 0, lineHeight: '1.5', color: '#333' }}>{result}</p>
+            </div>
+          )}
+
+          {/* Gateway Security Authorization Widget */}
+          {!token && (
+            <div style={{ marginTop: '30px', padding: '20px', background: '#fff', borderRadius: '8px', border: '1px solid #eee' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '15px' }}>{isSignUp ? 'Create a Student Account' : 'Log In to Save History'}</h3>
+              <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                <button type="submit" style={{ padding: '10px', background: '#52c41a', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  {isSignUp ? 'Register Account' : 'Log In'}
+                </button>
+              </form>
+              {authMessage && <p style={{ color: '#52c41a', margin: '10px 0 0 0', fontSize: '14px' }}>{authMessage}</p>}
+              <button onClick={() => { setIsSignUp(!isSignUp); setAuthMessage(''); }} style={{ background: 'none', border: 'none', color: '#0070f3', textDecoration: 'underline', marginTop: '12px', cursor: 'pointer', padding: 0 }}>
+                {isSignUp ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
+              </button>
+            </div>
+          )}
         </div>
 
+        {/* Right-Side Dashboard User Archive Panel */}
         {token && (
-          <p style={{ marginTop: '-20px', marginBottom: '20px', fontSize: '14px', color: '#555' }}>
-            Logged in as: <strong>{userEmail}</strong>
-          </p>
-        )}
-
-        {/* Metric Form Entry */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #eee' }}>
-          <div>
-            <label style={{ fontWeight: '600' }}>Ratio Name</label>
-            <input
-              type="text"
-              placeholder="e.g., Debt-to-Equity, Current Ratio"
-              value={ratioName}
-              onChange={(e) => setRatioName(e.target.value)}
-              required
-              style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <div>
-            <label style={{ fontWeight: '600' }}>Ratio Value</label>
-            <input
-              type="text"
-              placeholder="e.g., 2.5, 1.2"
-              value={ratioValue}
-              onChange={(e) => setRatioValue(e.target.value)}
-              required
-              style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: '12px',
-              background: loading ? '#66a3ff' : '#0070f3',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            {loading ? 'Processing...' : 'Generate Explanation'}
-          </button>
-        </form>
-
-        {/* Live Streaming Prompt Target Container */}
-        {result && (
-          <div style={{ marginTop: '20px', padding: '20px', background: '#fff', borderRadius: '8px', border: '1px solid #eee', borderLeft: '5px solid #0070f3' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '10px' }}>Recruiter-Ready Explanation:</h3>
-            <p style={{ margin: 0, lineHeight: '1.5', color: '#333' }}>{result}</p>
-          </div>
-        )}
-
-        {/* Gateway Security Authorization Widget */}
-        {!token && (
-          <div style={{ marginTop: '30px', padding: '20px', background: '#fff', borderRadius: '8px', border: '1px solid #eee' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '15px' }}>{isSignUp ? 'Create a Student Account' : 'Log In to Save History'}</h3>
-            <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-              <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-              <button type="submit" style={{ padding: '10px', background: '#52c41a', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
-                {isSignUp ? 'Register Account' : 'Log In'}
-              </button>
-            </form>
-            {authMessage && <p style={{ color: '#52c41a', margin: '10px 0 0 0', fontSize: '14px' }}>{authMessage}</p>}
-            <button onClick={() => { setIsSignUp(!isSignUp); setAuthMessage(''); }} style={{ background: 'none', border: 'none', color: '#0070f3', textDecoration: 'underline', marginTop: '12px', cursor: 'pointer', padding: 0 }}>
-              {isSignUp ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
-            </button>
+          <div style={{ width: '300px', backgroundColor: '#fff', borderLeft: '1px solid #eee', padding: '16px' }}>
+            <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #eee', fontSize: '16px' }}>
+              History
+            </h3>
+            {history.length === 0 ? (
+              <p style={{ color: '#aaa', fontSize: '14px' }}>Your saved explanations will appear here.</p>
+            ) : (
+              history.map((item) => (
+                <div
+                  key={item.id}
+                  style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '8px' }}
+                >
+                  <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0070f3' }}>{item.ratio_name}</div>
+                  <div style={{ fontSize: '13px', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>
+                    {item.ratio_value} - {item.generated_explanation
+                      ? item.generated_explanation.substring(0, 60) + '...'
+                      : 'No explanation'}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>
 
-      {/* Right-Side Dashboard User Archive Panel */}
-      {token && (
-        <div style={{ width: '300px', backgroundColor: '#fff', borderLeft: '1px solid #eee', padding: '16px' }}>
-          <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #eee', fontSize: '16px' }}>
-            History
-          </h3>
-          {history.length === 0 ? (
-            <p style={{ color: '#aaa', fontSize: '14px' }}>Your saved explanations will appear here.</p>
-          ) : (
-            history.map((item) => (
-              <div
-                key={item.id}
-                style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '8px' }}
-              >
-                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0070f3' }}>{item.ratio_name}</div>
-                <div style={{ fontSize: '13px', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>
-                  {item.ratio_value} - {item.generated_explanation
-                    ? item.generated_explanation.substring(0, 60) + '...'
-                    : 'No explanation'}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
-      <footer className="app-footer">
-        <p>
+      {/* Footer pinned to the bottom of the page */}
+      <footer
+        className="app-footer"
+        style={{
+          textAlign: 'center',
+          padding: '12px',
+          fontSize: '12px',
+          color: '#888',
+          borderTop: '1px solid #eee',
+          backgroundColor: '#fff'
+        }}
+      >
+        <p style={{ margin: 0 }}>
           &copy; 2026 Finance Ratio Explainer. Built with ❤️ by <span>Mariyam Noora Ahmed</span>
         </p>
       </footer>
