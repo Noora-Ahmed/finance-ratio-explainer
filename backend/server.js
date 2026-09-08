@@ -34,7 +34,7 @@ if (process.env.DATABASE_URL) {
       password: dbUrl.password,
       database: dbUrl.pathname.replace('/', ''),
       port: dbUrl.port || 3306,
-      ssl: { rejectUnauthorized: true }, 
+      ssl: { rejectUnauthorized: true },
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0
@@ -57,7 +57,7 @@ async function initializeDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    
+
     await db.query(`
       CREATE TABLE IF NOT EXISTS explanations (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,7 +85,7 @@ const authenticateToken = (req, res, next) => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Access token required' });
   }
-  
+
   const token = authHeader.split(' ')[1];
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -157,13 +157,21 @@ app.post('/api/explain', async (req, res) => {
 
     if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
 
-    // FIXED: Corrected structural object closure and assigned a supported model token path
+    // UPDATED: Prompt now asks for clean plain text instead of HTML,
+    // since the frontend renders this as plain text (not dangerouslySetInnerHTML).
     const response = await ai.models.generateContent({
       model: 'gemini-3.6-flash',
-      contents: `You are a corporate finance recruiter interviewing a student. Explain what a ratio of "${ratioValue}" means for a "${ratioName}". 
-Structure your response cleanly using HTML tags:
-- Use <strong> for key financial terms.
-- Use <ul> and <li> for an easy-to-read, bulleted list breakdown of the strengths, weaknesses, and recruiter takeaways.`
+      contents: `You are a corporate finance recruiter interviewing a student. Explain what a ratio of "${ratioValue}" means for a "${ratioName}".
+
+Respond in plain text only. Do NOT use any HTML tags, Markdown, or special formatting characters (no <strong>, <ul>, <li>, asterisks, or hashtags).
+
+Structure it like this using plain paragraphs:
+1. A short paragraph explaining what the ratio means in this context.
+2. A "Strengths:" section written as short plain-text lines starting with a dash (-), not HTML bullets.
+3. A "Weaknesses:" section written the same way.
+4. A short closing paragraph with a recruiter takeaway.
+
+Keep the tone conversational, like a recruiter explaining it out loud.`
     });
 
     const explanation = response.text;
