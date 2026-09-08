@@ -138,45 +138,46 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Core Day 2 Feature: Generate and Save Explanation
 app.post('/api/explain', async (req, res) => {
-  try {
-    const { ratioName, ratioValue } = req.body;
-    const authHeader = req.headers['authorization'];
-    let loggedInUserId = null;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      if (token && token !== 'null' && token !== 'undefined') {
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          loggedInUserId = decoded.userId;
-        } catch (err) {
-          // Suppress expired tokens silently for anonymous state flexibility
+    try {
+      const { ratioName, ratioValue } = req.body;
+      const authHeader = req.headers['authorization'];
+      let loggedInUserId = null;
+  
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        if (token && token !== 'null' && token !== 'undefined') {
+          try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            loggedInUserId = decoded.userId;
+          } catch (err) {
+            // Suppress expired tokens silently for anonymous state flexibility
+          }
         }
       }
+  
+      if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
+  
+      // CORRECTED: Uses the new @google/genai client method format
+      const interaction = await ai.create({
+        model: 'gemini-2.5-flash',
+        input: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
+      });
+  
+      const explanation = interaction.output_text;
+  
+      if (loggedInUserId) {
+        await db.query(
+          'INSERT INTO explanations (user_id, ratio_name, ratio_value, generated_explanation) VALUES (?, ?, ?, ?)',
+          [loggedInUserId, ratioName, ratioValue, explanation]
+        );
+      }
+  
+      return res.json({ explanation });
+    } catch (error) {
+      console.error('Gemini/Database Error:', error);
+      return res.status(500).json({ error: 'Failed to complete transaction.' });
     }
-
-    if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
-    });
-
-    const explanation = response.text;
-
-    if (loggedInUserId) {
-      await db.query(
-        'INSERT INTO explanations (user_id, ratio_name, ratio_value, generated_explanation) VALUES (?, ?, ?, ?)',
-        [loggedInUserId, ratioName, ratioValue, explanation]
-      );
-    }
-
-    return res.json({ explanation });
-  } catch (error) {
-    console.error('Gemini/Database Error:', error);
-    return res.status(500).json({ error: 'Failed to complete transaction.' });
-  }
-});
+  });
 
 // Day 3 Feature: Retrieve User History
 app.get('/api/history', authenticateToken, async (req, res) => {
