@@ -157,13 +157,13 @@ app.post('/api/explain', async (req, res) => {
   
       if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
   
-      // CORRECTED: Uses the new @google/genai client method format
-      const interaction = await ai.create({
+     // CORRECTED: Uses the accurate client generation syntax matching your library import
+    const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        input: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
+        contents: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
       });
   
-      const explanation = interaction.output_text;
+      const explanation = response.text;
   
       if (loggedInUserId) {
         await db.query(
