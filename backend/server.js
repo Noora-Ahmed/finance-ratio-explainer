@@ -34,7 +34,7 @@ if (process.env.DATABASE_URL) {
       password: dbUrl.password,
       database: dbUrl.pathname.replace('/', ''),
       port: dbUrl.port || 3306,
-      ssl: { rejectUnauthorized: true }, // Enforces safe SSL cloud handshake
+      ssl: { rejectUnauthorized: true }, 
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0
@@ -76,8 +76,8 @@ async function initializeDatabase() {
 }
 initializeDatabase();
 
-// 2. Initialize Gemini Client
-const ai = new GoogleGenAI();
+// 2. Initialize Gemini Client with Explicit Key Configuration
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // 3. Day 3: Authentication Token Verification Middleware
 const authenticateToken = (req, res, next) => {
@@ -86,7 +86,6 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Access token required' });
   }
   
-  // FIXED: Explicitly extraction index mapping position
   const token = authHeader.split(' ')[1];
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -125,7 +124,6 @@ app.post('/api/auth/login', async (req, res) => {
     const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (!users || users.length === 0) return res.status(400).json({ error: 'Invalid email or password' });
 
-    // FIXED: Properly unpacking row results by specifying first element row target index
     const user = users[0];
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(400).json({ error: 'Invalid email or password' });
@@ -146,7 +144,6 @@ app.post('/api/explain', async (req, res) => {
     let loggedInUserId = null;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      // FIXED: Safely extracting token index matching parameters
       const token = authHeader.split(' ')[1];
       if (token && token !== 'null' && token !== 'undefined') {
         try {
@@ -161,7 +158,7 @@ app.post('/api/explain', async (req, res) => {
     if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       contents: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
     });
 
