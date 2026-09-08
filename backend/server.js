@@ -159,7 +159,7 @@ app.post('/api/explain', async (req, res) => {
 
     // FIXED: Corrected structural object closure and assigned a supported model token path
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: `You are a corporate finance recruiter interviewing a student. Explain what a ratio of "${ratioValue}" means for a "${ratioName}". 
 Structure your response cleanly using HTML tags:
 - Use <strong> for key financial terms.
