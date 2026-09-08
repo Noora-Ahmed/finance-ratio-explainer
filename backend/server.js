@@ -159,7 +159,7 @@ app.post('/api/explain', async (req, res) => {
   
      // CORRECTED: Uses the accurate client generation syntax matching your library import
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.6-flash',
         contents: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
       });
   
