@@ -12,12 +12,14 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// 1. Dynamic Pool Configuration Setup (Auto-switches between Local & Cloud Aiven parameters)
+// 1. Dynamic Pool Configuration Setup (Auto-switches between Local & Cloud TiDB parameters)
 let poolConfig = {
   host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'finance_explainer_db',
+  ssl: process.env.DB_HOST && process.env.DB_HOST !== 'localhost' ? { rejectUnauthorized: true } : false,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -32,7 +34,7 @@ if (process.env.DATABASE_URL) {
       password: dbUrl.password,
       database: dbUrl.pathname.replace('/', ''),
       port: dbUrl.port || 3306,
-      ssl: { rejectUnauthorized: false }, // Enforces safe SSL cloud handshake
+      ssl: { rejectUnauthorized: true }, // Enforces safe SSL cloud handshake
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0
@@ -159,7 +161,7 @@ app.post('/api/explain', async (req, res) => {
     if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.5-flash',
       contents: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
     });
 
