@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 10000; // Render expects port 10000 by default
 
 app.use(cors());
 app.use(express.json());
@@ -136,50 +136,51 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Core Day 2 Feature: Generate and Save Explanation
+// Core Feature: Generate and Save Explanation
 app.post('/api/explain', async (req, res) => {
-    try {
-      const { ratioName, ratioValue } = req.body;
-      const authHeader = req.headers['authorization'];
-      let loggedInUserId = null;
-  
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.split(' ')[1];
-        if (token && token !== 'null' && token !== 'undefined') {
-          try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            loggedInUserId = decoded.userId;
-          } catch (err) {
-            // Suppress expired tokens silently for anonymous state flexibility
-          }
+  try {
+    const { ratioName, ratioValue } = req.body;
+    const authHeader = req.headers['authorization'];
+    let loggedInUserId = null;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      if (token && token !== 'null' && token !== 'undefined') {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          loggedInUserId = decoded.userId;
+        } catch (err) {
+          // Suppress expired tokens silently for anonymous state flexibility
         }
       }
-  
-      if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
-  
-     // CORRECTED: Uses the accurate client generation syntax matching your library import
+    }
+
+    if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
+
+    // FIXED: Corrected structural object closure and assigned a supported model token path
     const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: `You are a corporate finance recruiter interviewing a student. Explain what a ratio of "${ratioValue}" means for a "${ratioName}". 
+      model: 'gemini-2.5-flash',
+      contents: `You are a corporate finance recruiter interviewing a student. Explain what a ratio of "${ratioValue}" means for a "${ratioName}". 
 Structure your response cleanly using HTML tags:
 - Use <strong> for key financial terms.
 - Use <ul> and <li> for an easy-to-read, bulleted list breakdown of the strengths, weaknesses, and recruiter takeaways.`
-  
-      const explanation = response.text;
-  
-      if (loggedInUserId) {
-        await db.query(
-          'INSERT INTO explanations (user_id, ratio_name, ratio_value, generated_explanation) VALUES (?, ?, ?, ?)',
-          [loggedInUserId, ratioName, ratioValue, explanation]
-        );
-      }
-  
-      return res.json({ explanation });
-    } catch (error) {
-      console.error('Gemini/Database Error:', error);
-      return res.status(500).json({ error: 'Failed to complete transaction.' });
+    });
+
+    const explanation = response.text;
+
+    if (loggedInUserId) {
+      await db.query(
+        'INSERT INTO explanations (user_id, ratio_name, ratio_value, generated_explanation) VALUES (?, ?, ?, ?)',
+        [loggedInUserId, ratioName, ratioValue, explanation]
+      );
     }
-  });
+
+    return res.json({ explanation });
+  } catch (error) {
+    console.error('Gemini/Database Error:', error);
+    return res.status(500).json({ error: 'Failed to complete transaction.' });
+  }
+});
 
 // Day 3 Feature: Retrieve User History
 app.get('/api/history', authenticateToken, async (req, res) => {
@@ -195,6 +196,7 @@ app.get('/api/history', authenticateToken, async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+// FIXED: Bound host routing specifically to 0.0.0.0 to clear Render network port scanning timeouts
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server successfully active on port ${port}`);
 });
