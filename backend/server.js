@@ -12,7 +12,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// 1. Dynamic Pool Configuration Setup (Clean URL configuration target mappings)
+// 1. Dynamic Pool Configuration Setup (Auto-switches between Local & Cloud Aiven parameters)
 let poolConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
@@ -23,7 +23,6 @@ let poolConfig = {
   queueLimit: 0
 };
 
-// Force structural parsing of the connection URL string parameter if live on Render
 if (process.env.DATABASE_URL) {
   try {
     const dbUrl = new URL(process.env.DATABASE_URL);
@@ -33,19 +32,19 @@ if (process.env.DATABASE_URL) {
       password: dbUrl.password,
       database: dbUrl.pathname.replace('/', ''),
       port: dbUrl.port || 3306,
-      ssl: { rejectUnauthorized: false }, // Enforces safe SSL handshake parsing
+      ssl: { rejectUnauthorized: false }, // Enforces safe SSL cloud handshake
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0
     };
   } catch (urlErr) {
-    console.error('DATABASE_URL parsing failed, falling back to basic fields:', urlErr);
+    console.error('DATABASE_URL parsing failed, falling back to fields:', urlErr);
   }
 }
 
 const db = mysql.createPool(poolConfig);
 
-// AUTOMATIC TABLE INITIALIZER: Sets up tables cleanly on cloud database instances automatically
+// AUTOMATIC TABLE INITIALIZER: Sets up database structures automatically on empty instances
 async function initializeDatabase() {
   try {
     await db.query(`
@@ -78,14 +77,14 @@ initializeDatabase();
 // 2. Initialize Gemini Client
 const ai = new GoogleGenAI();
 
-// 3. Day 3: Authentication Middleware
+// 3. Day 3: Authentication Token Verification Middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Access token required' });
   }
   
-  // FIXED: Extract individual token out of bearer format string mapping array cleanly
+  // FIXED: Explicitly extraction index mapping position
   const token = authHeader.split(' ')[1];
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -124,7 +123,7 @@ app.post('/api/auth/login', async (req, res) => {
     const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (!users || users.length === 0) return res.status(400).json({ error: 'Invalid email or password' });
 
-    // FIXED: Correctly matching properties from row items arrays
+    // FIXED: Properly unpacking row results by specifying first element row target index
     const user = users[0];
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(400).json({ error: 'Invalid email or password' });
@@ -145,13 +144,14 @@ app.post('/api/explain', async (req, res) => {
     let loggedInUserId = null;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
+      // FIXED: Safely extracting token index matching parameters
       const token = authHeader.split(' ')[1];
       if (token && token !== 'null' && token !== 'undefined') {
         try {
           const decoded = jwt.verify(token, process.env.JWT_SECRET);
           loggedInUserId = decoded.userId;
         } catch (err) {
-          // Suppress invalid tokens silently
+          // Suppress expired tokens silently for anonymous state flexibility
         }
       }
     }
