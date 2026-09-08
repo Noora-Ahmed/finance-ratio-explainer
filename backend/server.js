@@ -79,7 +79,7 @@ initializeDatabase();
 // 2. Initialize Gemini Client with Explicit Key Configuration
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// 3. Day 3: Authentication Token Verification Middleware
+// 3. Authentication Token Verification Middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -158,7 +158,7 @@ app.post('/api/explain', async (req, res) => {
     if (!ratioName || !ratioValue) return res.status(400).json({ error: 'Provide name and value.' });
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       contents: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
     });
 
