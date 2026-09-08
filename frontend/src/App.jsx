@@ -224,46 +224,43 @@ function App() {
           </div>
         )}
       </div>
-
-
-    {/* Right-Side Dashboard User Archive Panel */}
-    {token && (
-      <div style={{ width: '300px', backgroundColor: '#fff', borderLeft: '1px solid #eee', padding: '16px' }}>
-        <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #eee', fontSize: '16px' }}>History</h3>
-        {history.length === 0 ? (
-          <p style={{ color: '#aaa', fontSize: '14px' }}>Your saved explanations will appear here.</p>
-        ) : (
-          history.map((item) => (
-            <div key={item.id} style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '8px' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0070f3' }}>{item.ratio_name}</div>
-              <div style={{ fontSize: '13px', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>
-                {item.ratio_value} - {item.generated_explanation ? item.generated_explanation.substring(0, 60) + '...' : 'No explanation'}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      {/* Right-Side Dashboard User Archive Panel */}
+{token && (
+  <div style={{ width: '300px', backgroundColor: '#fff', borderLeft: '1px solid #eee', padding: '16px' }}>
+    <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #eee', fontSize: '16px' }}>
+      History
+    </h3>
+    {history.length === 0 ? (
+      <p style={{ color: '#aaa', fontSize: '14px' }}>Your saved explanations will appear here.</p>
+    ) : (
+      history.map((item) => (
+        <div
+          key={item.id}
+          style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '8px' }}
+        >
+          <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0070f3' }}>{item.ratio_name}</div>
+          <div style={{ fontSize: '13px', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>
+            {item.ratio_value} - {item.generated_explanation
+              ? item.generated_explanation.substring(0, 60) + '...'
+              : 'No explanation'}
+          </div>
+        </div>
+      ))
     )}
-
   </div>
-) : (
-  <div style={{ padding: '20px', textAlign: 'center' }}>Loading dashboard archive...</div>
+)}
+
+{/* Fallback when token is not available */}
+{!token && (
+  <div style={{ padding: '20px', textAlign: 'center' }}>
+    Loading dashboard archive...
+  </div>
 )}
 
 <footer className="app-footer">
-  <p>&copy; 2026 Finance Ratio Explainer. Built with ❤️ by <span>Mariyam Noora Ahmed</span></p>
+  <p>
+    &copy; 2026 Finance Ratio Explainer. Built with ❤️ by <span>Mariyam Noora Ahmed</span>
+  </p>
 </footer>
 
-</div>
-  );
-}
 
-// Target entry mount
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-}
