@@ -160,8 +160,10 @@ app.post('/api/explain', async (req, res) => {
      // CORRECTED: Uses the accurate client generation syntax matching your library import
     const response = await ai.models.generateContent({
         model: 'gemini-3.6-flash',
-        contents: `You are a corporate finance recruiter interviewing a student. Explain what a "${ratioName}" of ${ratioValue} means for a company's health. Keep it to 2 sentences max.`,
-      });
+        contents: `You are a corporate finance recruiter interviewing a student. Explain what a ratio of "${ratioValue}" means for a "${ratioName}". 
+Structure your response cleanly using HTML tags:
+- Use <strong> for key financial terms.
+- Use <ul> and <li> for an easy-to-read, bulleted list breakdown of the strengths, weaknesses, and recruiter takeaways.`
   
       const explanation = response.text;
   

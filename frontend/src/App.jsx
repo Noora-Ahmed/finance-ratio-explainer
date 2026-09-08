@@ -116,7 +116,7 @@ function App() {
       setAuthMessage(err.message);
     }
   };
-  
+
   // Clean Session Workspace Reset
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -238,14 +238,19 @@ function App() {
                 <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0070f3' }}>{item.ratio_name}: {item.ratio_value}</div>
                 <div style={{ fontSize: '13px', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>{item.generated_explanation}</div>
               </div>
-            ))
-          )}
-        </div>
-      )}
+        );
+    })
+  )}
+</div>
+) : (
+<div style={{ padding: '20px', textAlign: 'center' }}>Loading dashboard archive...</div>
+)}
 
-    </div>
-  );
-}
+<footer className="app-footer">
+<p>&copy; 2026 Finance Ratio Explainer. Built with ❤️ by <span>Mariyam Noora Ahmed</span></p>
+</footer>
+
+</div>
 
 // Target entry mount
 ReactDOM.createRoot(document.getElementById('root')).render(
