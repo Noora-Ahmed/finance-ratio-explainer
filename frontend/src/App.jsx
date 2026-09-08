@@ -234,23 +234,24 @@ function App() {
             <p style={{ color: '#aaa', fontSize: '14px' }}>Your saved explanations will appear here.</p>
           ) : (
             history.map((item) => (
-              <div key={item.id} style={{ padding: '12px', border: '1px solid #eee', borderRadius: '6px', marginBottom: '10px', backgroundColor: '#fafafa' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0070f3' }}>{item.ratio_name}: {item.ratio_value}</div>
-                <div style={{ fontSize: '13px', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>{item.generated_explanation}</div>
-              </div>
-        );
-    })
-  )}
-</div>
+                <div key={item.id} style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '8px' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#0070f3' }}>{item.ratio_name}</div>
+                  <div style={{ fontSize: '13px', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>
+                    {item.ratio_value} - {item.explanation ? item.explanation.substring(0, 60) + '...' : 'No explanation'}
+                )
+      })
+    )}
 ) : (
-<div style={{ padding: '20px', textAlign: 'center' }}>Loading dashboard archive...</div>
-)}
+        <div style={{ padding: '20px', textAlign: 'center' }}>Loading dashboard archive...</div>
+      )}
 
-<footer className="app-footer">
-<p>&copy; 2026 Finance Ratio Explainer. Built with ❤️ by <span>Mariyam Noora Ahmed</span></p>
-</footer>
+      <footer className="app-footer">
+        <p>&copy; 2026 Finance Ratio Explainer. Built with ❤️ by <span>Mariyam Noora Ahmed</span></p>
+      </footer>
 
-</div>
+    </div>
+  );
+}
 
 // Target entry mount
 ReactDOM.createRoot(document.getElementById('root')).render(
