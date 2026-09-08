@@ -2,18 +2,15 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 
 function App() {
-  // Dynamic Environment Base URL Configuration mapped to your live Render backend
   const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:5000'
     : 'https://finance-ratio-explainer.onrender.com';
 
-  // Ratio Inputs & Outputs State
   const [ratioName, setRatioName] = useState('');
   const [ratioValue, setRatioValue] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Day 3 Authentication States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -21,10 +18,8 @@ function App() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [authMessage, setAuthMessage] = useState('');
 
-  // Day 3 Saved History State
   const [history, setHistory] = useState([]);
 
-  // Fetch History from Backend Database
   const fetchHistory = async () => {
     if (!token) return;
     try {
@@ -40,16 +35,13 @@ function App() {
     }
   };
 
-  // Automatically fetch history data on login state changes
   useEffect(() => {
     fetchHistory();
   }, [token]);
 
-  // Day 2 Live AI Pipeline & Day 3 Saved Action Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Day 4 Input Constraint Check
     if (ratioName.length > 50 || ratioValue.length > 20) {
       setResult('⚠️ Input limits exceeded. Please keep the ratio name under 50 characters and the value under 20 characters.');
       return;
@@ -72,7 +64,7 @@ function App() {
 
       if (response.ok) {
         setResult(data.explanation);
-        fetchHistory(); // Sync sidepanel timeline instantly
+        fetchHistory();
       } else {
         setResult(data.error || 'Something went wrong.');
       }
@@ -84,7 +76,6 @@ function App() {
     }
   };
 
-  // Day 3 User Security Identity Endpoint Client
   const handleAuth = async (e) => {
     e.preventDefault();
     setAuthMessage('');
@@ -116,7 +107,6 @@ function App() {
     }
   };
 
-  // Clean Session Workspace Reset
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
@@ -128,13 +118,10 @@ function App() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f9f9f9' }}>
 
-      {/* Main two-column layout */}
       <div style={{ display: 'flex', flex: 1 }}>
 
-        {/* Left Workspace Panel */}
         <div style={{ flex: 1, padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
 
-          {/* Core Workspace Header & Landing Hero */}
           <div style={{ marginBottom: '35px', paddingBottom: '20px', borderBottom: '1px solid #eaeaea' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#111', letterSpacing: '-0.5px', margin: 0 }}>
@@ -157,7 +144,6 @@ function App() {
             </p>
           )}
 
-          {/* Metric Form Entry */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #eee' }}>
             <div>
               <label style={{ fontWeight: '600' }}>Ratio Name</label>
@@ -200,7 +186,6 @@ function App() {
             </button>
           </form>
 
-          {/* Live Streaming Prompt Target Container */}
           {result && (
             <div style={{ marginTop: '20px', padding: '20px', background: '#fff', borderRadius: '8px', border: '1px solid #eee', borderLeft: '5px solid #0070f3' }}>
               <h3 style={{ marginTop: 0, marginBottom: '10px' }}>Recruiter-Ready Explanation:</h3>
@@ -208,7 +193,6 @@ function App() {
             </div>
           )}
 
-          {/* Gateway Security Authorization Widget */}
           {!token && (
             <div style={{ marginTop: '30px', padding: '20px', background: '#fff', borderRadius: '8px', border: '1px solid #eee' }}>
               <h3 style={{ marginTop: 0, marginBottom: '15px' }}>{isSignUp ? 'Create a Student Account' : 'Log In to Save History'}</h3>
@@ -227,7 +211,6 @@ function App() {
           )}
         </div>
 
-        {/* Right-Side Dashboard User Archive Panel */}
         {token && (
           <div style={{ width: '300px', backgroundColor: '#fff', borderLeft: '1px solid #eee', padding: '16px' }}>
             <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #eee', fontSize: '16px' }}>
@@ -254,7 +237,6 @@ function App() {
         )}
       </div>
 
-      {/* Footer pinned to the bottom of the page */}
       <footer
         className="app-footer"
         style={{
